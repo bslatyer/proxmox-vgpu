@@ -615,6 +615,122 @@ Finish by clicking `Add`, start the VM and install the required drivers. After i
 
 Enjoy your new vGPU VM :)
 
+## Passthrough and vGPU enabled
+
+If you have multiple GPUs on the same Proxmox server, you can have both GPU pass through and vGPU enabled at the same time.   If you have done all the steps up to this point, you are mostly done and just need to do a few more steps to set things up.
+
+First run the following to see the NVidia GPUs are in your system:
+
+```bash
+lspci | grep -i Nvidia
+```
+
+Now you should see something like the following:
+
+```
+82:00.0 3D controller: NVIDIA Corporation GP100GL [Tesla P100 PCIe 16GB] (rev a1)
+87:00.0 VGA compatible controller: NVIDIA Corporation GM206GL [Quadro M2000] (rev a1)
+87:00.1 Audio device: NVIDIA Corporation GM206 High Definition Audio Controller (rev a1)
+```
+
+For the GPU you want to enable/have passthrough for, run the following command: ( swap out the id from the one on your system )
+
+```bash
+lspci -v -n -s 87:00 | grep 87:00
+```
+
+You should see something like the following:
+
+```
+87:00.0 0300: 10de:1430 (rev a1) (prog-if 00 [VGA controller])
+87:00.1 0403: 10de:0fba (rev a1)
+```
+
+The 87:00.0 is the video controller and the 87:00.1 is the audio controller.   Take the ids in the third column and add them to the /etc/modprobe.d/vfio.conf like the contents below( again, make sure to use the values from your system ):
+
+```
+#  nvidia Quadro M2000 video and hdmi audio
+options vfio-pci ids=10de:1430 disable_vga=1
+options vfio-pci ids=10de:0fba
+```
+
+After you have modified the file( or created ), save the contents and run the following command:
+
+```bash
+update-initramfs -u
+```
+
+Now for the finial change, we need to update the /etc/default/grub file.    When setting the GRUB_CMDLINE_LINUX_DEFAULT argument, we need to append the following to the end of it.
+
+```
+vfio-pci.ids=10de:1430,10de:0fba
+```
+
+The ids are the same ones you used in the /etc/modprobe.d/vfio.conf file.   Here is an exmaple of the full argument setting:
+
+```
+GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt pcie_acs_override=downstream vfio-pci.ids=10de:1430,10de:0fba"
+```
+
+When you pass the vfio-pci.ids arguments to the linux kernel, it forces those ids to use the vfio driver/module even though the NVidia drivers/modules are installed.
+
+After you have save the contents of /etc/default/grub, run the following command:
+
+```bash
+update-grub
+```
+
+And lastly run the following:
+
+```bash
+reboot
+```
+
+Once the server has rebooted, you can verify if the GPU you want to use for passthrough is setup correctly( use the id of the GPU for your system ):
+
+```bash
+lspci -v -n -s 87:00
+```
+
+You should see something like the following:
+
+```
+87:00.0 0300: 10de:1430 (rev a1) (prog-if 00 [VGA controller])
+        Subsystem: 1028:1190
+        Physical Slot: 0-8
+        Flags: bus master, fast devsel, latency 0, IRQ 427, NUMA node 1, IOMMU group 91
+        Memory at f8000000 (32-bit, non-prefetchable) [size=16M]
+        Memory at 39fc10000000 (64-bit, prefetchable) [size=256M]
+        Memory at 39fc20000000 (64-bit, prefetchable) [size=32M]
+        I/O ports at f000 [size=128]
+        Expansion ROM at f9000000 [disabled] [size=512K]
+        Capabilities: [60] Power Management version 3
+        Capabilities: [68] MSI: Enable+ Count=1/1 Maskable- 64bit+
+        Capabilities: [78] Express Legacy Endpoint, MSI 00
+        Capabilities: [100] Virtual Channel
+        Capabilities: [258] L1 PM Substates
+        Capabilities: [128] Power Budgeting <?>
+        Capabilities: [420] Advanced Error Reporting
+        Capabilities: [600] Vendor Specific Information: ID=0001 Rev=1 Len=024 <?>
+        Capabilities: [900] Secondary PCI Express
+        Kernel driver in use: vfio-pci
+        Kernel modules: nvidiafb, nouveau, nvidia_vgpu_vfio, nvidia
+
+87:00.1 0403: 10de:0fba (rev a1)
+        Subsystem: 1028:1190
+        Physical Slot: 0-8
+        Flags: bus master, fast devsel, latency 0, IRQ 426, NUMA node 1, IOMMU group 91
+        Memory at f9080000 (32-bit, non-prefetchable) [size=16K]
+        Capabilities: [60] Power Management version 3
+        Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [78] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Kernel driver in use: vfio-pci
+        Kernel modules: snd_hda_intel
+```
+
+Look at the 'Kernel driver in use:' line(s) as they should list 'vfio-pci' as the module/driver being used.   If it has nvidia or nouveau listed, double check the ids used in both the /etc/default/grub and /etc/modprobe.d/cfio.conf files.   If you need to change either one of the files, make sure to run the corresponding update command corresponding to the file.
+
 ## Common problems
 
 Most problems can be solved by reading the instructions very carefully. For some very common problems, read here:
