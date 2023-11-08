@@ -256,7 +256,8 @@ Depending on your mainboard and cpu, the output will be different, in my output 
 This repo contains patches that allow you to use vGPU on not-qualified-vGPU cards (consumer GPUs). Those patches are binary patches, which means that each patch works **ONLY** for a specific driver version.
 
 I've created patches for the following driver versions:
-- 16.1 (535.104.06) - Use this if you are on pve 8.0 (kernel 6.2)
+- 16.2 (535.129.03) - Use this if you are on pve 8.0 (kernel 6.2, 6.5 should work too)
+- 16.1 (535.104.06)
 - 16.0 (535.54.06)
 - 15.1 (525.85.07)
 - 15.0 (525.60.12)
@@ -264,7 +265,7 @@ I've created patches for the following driver versions:
 - 14.3 (510.108.03)
 - 14.2 (510.85.03)
 
-You can choose which of those you want to use, but generally its recommended to use the latest, most up-to-date version (16.1 in this case).
+You can choose which of those you want to use, but generally its recommended to use the latest, most up-to-date version (16.2 in this case).
 
 If you have a vGPU qualified GPU, you can use other versions too, because you don't need to patch the driver. However, you still have to make sure they are compatible with your proxmox version and kernel. Also I would not recommend using any older versions unless you have a very specific requirement.
 
@@ -278,11 +279,11 @@ I've created a small video tutorial to find the right driver version on the NVID
 
 ![Video Tutorial to find the right driver](downloading_driver.mp4)
 
-After downloading, extract the zip file and then copy the file called `NVIDIA-Linux-x86_64-DRIVERVERSION-vgpu-kvm.run` (where DRIVERVERSION is a string like `535.104.06`) from the `Host_Drivers` folder to your Proxmox host into the `/root/` folder using tools like FileZilla, WinSCP, scp or rsync.
+After downloading, extract the zip file and then copy the file called `NVIDIA-Linux-x86_64-DRIVERVERSION-vgpu-kvm.run` (where DRIVERVERSION is a string like `535.129.03`) from the `Host_Drivers` folder to your Proxmox host into the `/root/` folder using tools like FileZilla, WinSCP, scp or rsync.
 
-### ⚠️ From here on, I will be using the 16.1 driver, but the steps are the same for other driver versions
+### ⚠️ From here on, I will be using the 16.2 driver, but the steps are the same for other driver versions
 
-For example when I run a command like `chmod +x NVIDIA-Linux-x86_64-535.104.06-vgpu-kvm.run`, you should replace `535.104.06` with the driver version you are using (if you are using a different one). You can get the list of version numbers [here](#nvidia-driver).
+For example when I run a command like `chmod +x NVIDIA-Linux-x86_64-535.129.03-vgpu-kvm.run`, you should replace `535.129.03` with the driver version you are using (if you are using a different one). You can get the list of version numbers [here](#nvidia-driver).
 
 Every step where you potentially have to replace the version name will have this warning emoji next to it: ⚠️
 
@@ -294,8 +295,8 @@ Every step where you potentially have to replace the version name will have this
 >
 > ⚠️
 > ```bash
-> chmod +x NVIDIA-Linux-x86_64-535.104.06-vgpu-kvm.run
-> ./NVIDIA-Linux-x86_64-535.104.06-vgpu-kvm.run --dkms
+> chmod +x NVIDIA-Linux-x86_64-535.129.03-vgpu-kvm.run
+> ./NVIDIA-Linux-x86_64-535.129.03-vgpu-kvm.run --dkms
 > ```
 >
 > To finish the installation, reboot the system
@@ -311,21 +312,21 @@ Now, on the proxmox host, make the driver executable
 
 ⚠️
 ```bash
-chmod +x NVIDIA-Linux-x86_64-535.104.06-vgpu-kvm.run
+chmod +x NVIDIA-Linux-x86_64-535.129.03-vgpu-kvm.run
 ```
 
 And then patch it
 
 ⚠️
 ```bash
-./NVIDIA-Linux-x86_64-535.104.06-vgpu-kvm.run --apply-patch ~/vgpu-proxmox/535.104.06.patch
+./NVIDIA-Linux-x86_64-535.129.03-vgpu-kvm.run --apply-patch ~/vgpu-proxmox/535.129.03.patch
 ```
 That should output a lot of lines ending with
 ```
-Self-extractible archive "NVIDIA-Linux-x86_64-535.104.06-vgpu-kvm-custom.run" successfully created.
+Self-extractible archive "NVIDIA-Linux-x86_64-535.129.03-vgpu-kvm-custom.run" successfully created.
 ```
 
-You should now have a file called `NVIDIA-Linux-x86_64-535.104.06-vgpu-kvm-custom.run`, that is your patched driver.
+You should now have a file called `NVIDIA-Linux-x86_64-535.129.03-vgpu-kvm-custom.run`, that is your patched driver.
 
 ### Installing the driver
 
@@ -333,7 +334,7 @@ Now that the required patch is applied, you can install the driver
 
 ⚠️
 ```bash
-./NVIDIA-Linux-x86_64-535.104.06-vgpu-kvm-custom.run --dkms
+./NVIDIA-Linux-x86_64-535.129.03-vgpu-kvm-custom.run --dkms
 ```
 
 The installer will ask you `Would you like to register the kernel module sources with DKMS? This will allow DKMS to automatically build a new module, if you install a different kernel later.`, answer with `Yes`.
@@ -342,7 +343,7 @@ Depending on your hardware, the installation could take a minute or two.
 
 If everything went right, you will be presented with this message.
 ```
-Installation of the NVIDIA Accelerated Graphics Driver for Linux-x86_64 (version: 535.104.06) is now complete.
+Installation of the NVIDIA Accelerated Graphics Driver for Linux-x86_64 (version: 535.129.03) is now complete.
 ```
 
 Click `Ok` to exit the installer.
