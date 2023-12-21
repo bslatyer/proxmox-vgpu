@@ -2,7 +2,7 @@
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/polloloco)
 
-This document serves as a guide to install NVIDIA vGPU host drivers on the latest Proxmox VE version, at time of writing this its pve 8.0.
+This document serves as a guide to install NVIDIA vGPU host drivers on the latest Proxmox VE version, at time of writing this its pve 8.1.
 
 You can follow this guide if you have a vGPU supported card from [this list](https://docs.nvidia.com/grid/gpus-supported-by-vgpu.html), or if you are using a consumer GPU from the GeForce series or a non-vGPU qualified Quadro GPU. There are several sections with a title similar to "Have a vGPU supported GPU? Read here" in this document, make sure to read those very carefully as this is where the instructions differ for a vGPU qualified card and a consumer card.
 
@@ -20,8 +20,8 @@ If you have GPUs from the Ampere and Ada Lovelace generation, you are out of luc
 This guide and all my tests were done on a RTX 2080 Ti which is based on the Turing architechture.
 
 ## Important notes before starting
-- This tutorial assumes you are using a clean install of Proxmox VE 8.0.
-- If you are using Proxmox VE 8.0, you **MUST** use 16.x drivers. Older versions only work with pve 7
+- This tutorial assumes you are using a clean install of Proxmox VE 8.1.
+- If you are using Proxmox VE 8.1, you **MUST** use 16.x drivers. Older versions only work with pve 7
 - If you tried GPU-passthrough before, you absolutely **MUST** revert all of the steps you did to set that up.
 - If you only have one GPU in your system with no iGPU, your local monitor will **NOT** give you any output anymore after the system boots up. Use SSH or a serial connection if you want terminal access to your machine.
 - Most of the steps can be applied to other linux distributions, however I'm only covering Proxmox VE here.
@@ -256,14 +256,16 @@ Depending on your mainboard and cpu, the output will be different, in my output 
 This repo contains patches that allow you to use vGPU on not-qualified-vGPU cards (consumer GPUs). Those patches are binary patches, which means that each patch works **ONLY** for a specific driver version.
 
 I've created patches for the following driver versions:
-- 16.2 (535.129.03) - Use this if you are on pve 8.0 (kernel 6.2, 6.5 should work too)
+- 16.2 (535.129.03) - Use this if you are on pve 8.1 (kernel 6.2, 6.5 should work too)
 - 16.1 (535.104.06)
 - 16.0 (535.54.06)
-- 15.1 (525.85.07)
-- 15.0 (525.60.12)
-- 14.4 (510.108.03)
-- 14.3 (510.108.03)
-- 14.2 (510.85.03)
+
+> ### The following versions are EOL, don't use them unless you have a very specific reason!
+> - 15.1 (525.85.07)
+> - 15.0 (525.60.12)
+> - 14.4 (510.108.03)
+> - 14.3 (510.108.03)
+> - 14.2 (510.85.03)
 
 You can choose which of those you want to use, but generally its recommended to use the latest, most up-to-date version (16.2 in this case).
 
@@ -601,6 +603,7 @@ Most problems can be solved by reading the instructions very carefully. For some
   - Make sure that you don't have unlock disabled if you have a consumer gpu ([more information](#have-a-vgpu-supported-card-read-here))
 - vGPU doesn't work on my RTX 3080! What to do?
   - [Learn to read](#your-rtx-30xx-or-40xx-will-not-work-at-this-point-in-time)
+- Make sure that you don't have any dummy plugs connected to the GPU ports, they may cause problems as [reported by a user from the vgpu discord](https://discord.com/channels/829786927829745685/1182258311014400040/1187339682082721822)
 
 ## Support
 
