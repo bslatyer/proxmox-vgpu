@@ -135,17 +135,20 @@ Depending on which system you are using to boot, you have to chose from the foll
 
   If you are using an Intel system, append this after `quiet`:
   ```
-  intel_iommu=on iommu=pt
+  intel_iommu=on
   ```
 
-  On AMD systems, append this after `quiet`:
+  On AMD systems, you don't have to add anything and amd_iommu=on does not exist:
+  https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html?highlight=amd_iommu
+
+  For either AMD or Intel there is an option incase you have heavy performance issues, but with the loss of security and stability of the system:
   ```
-  amd_iommu=on iommu=pt
+  iommu=pt
   ```
 
   The result should look like this (for intel systems):
   ```
-  GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"
+  GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on"
   ```
 
   Now, save and exit from the editor using Ctrl+O and then Ctrl+X and then apply your changes:
@@ -169,17 +172,20 @@ Depending on which system you are using to boot, you have to chose from the foll
 
   On Intel systems, append this at the end
   ```
-  intel_iommu=on iommu=pt
+  intel_iommu=on
   ```
 
-  For AMD, use this
+  On AMD systems, you don't have to add anything and amd_iommu=on does not exist:
+  https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html?highlight=amd_iommu
+
+  For either AMD or Intel there is an option incase you have heavy performance issues, but with the loss of security and stability of the system:
   ```
-  amd_iommu=on iommu=pt
+  iommu=pt
   ```
 
   After editing the file, it should look similar to this
   ```
-  root=ZFS=rpool/ROOT/pve-1 boot=zfs intel_iommu=on iommu=pt
+  root=ZFS=rpool/ROOT/pve-1 boot=zfs intel_iommu=on
   ```
 
   Now, save and exit from the editor using Ctrl+O and then Ctrl+X and then apply your changes:
