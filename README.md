@@ -13,7 +13,7 @@ The following consumer/not-vGPU-qualified NVIDIA GPUs can be used with vGPU:
 - All GPUs from the Pascal generation (GTX 10xx, Quadro Pxxxx, Tesla Pxx)
 - All GPUs from the Turing generation (GTX 16xx, RTX 20xx, Txxxx)
 
-Starting from driver version 17.0, Pascal and earlier require additional patches, see below for more!
+Starting from driver version 17.0, Pascal and earlier require additional patches, see [below](#psa-for-pascal-and-older-gpus-like-the-p4-gtx-1080) for more!
 
 If you have GPUs from the Ampere and Ada Lovelace generation, you are out of luck, unless you have a vGPU qualified card from [this list](https://docs.nvidia.com/grid/gpus-supported-by-vgpu.html) like the A5000 or RTX 6000 Ada. If you have one of those cards, please consult the [NVIDIA documentation](https://docs.nvidia.com/grid/15.0/grid-vgpu-user-guide/index.html) for help with setting it up.
 
@@ -610,6 +610,12 @@ Enjoy your new vGPU VM :)
 Usually a license is required to use vGPU, but luckily the community found several ways around that. Spoofing the vGPU instance to a Quadro GPU used to be very popular, but I don't recommend it anymore. I've also removed the related sections from this guide. If you still want it for whatever reason, you can go back in the commit history to find the instructions on how to use that.
 
 The recommended way to get around the license is to set up your own license server. Follow the instructions [here](https://git.collinwebdesigns.de/oscar.krause/fastapi-dls) (or [here](https://gitea.publichub.eu/oscar.krause/fastapi-dls) if the other link is down).
+
+## PSA for Pascal (and older) GPUs like the P4, GTX 1080...
+
+Starting from driver version 17.0, nvidia in their infinite wisdom dropped support for older cards, so now no matter if the card used to be supported (Tesla P4 etc) or not, you have to patch the driver.
+
+**In addition to that** you have to copy the vgpuConfig.xml from 16.4 and replace the new 17.0 xml. To do that, you install and patch the 17.0 driver as described above, and then extract the 16.4 driver with `./driver.run -x`, and copy the `vgpuConfig.xml` from inside the extracted archive to `/usr/share/nvidia/vgpu/vgpuConfig.xml` (replace the existing file). Then reboot and you should see vgpu profiles in mdevctl again.
 
 ## Common problems
 
