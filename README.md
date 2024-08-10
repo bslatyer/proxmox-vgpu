@@ -63,10 +63,10 @@ First, clone this repo to your home folder (in this case `/root/`)
 git clone https://gitlab.com/polloloco/vgpu-proxmox.git
 ```
 
-You also need the vgpu_unlock-rs repo (note that I'm using my own fork here because my pull request for 17.0 wasn't merged yet)
+You also need the vgpu_unlock-rs repo
 ```bash
 cd /opt
-git clone https://github.com/polloloco/vgpu_unlock-rs.git
+git clone https://github.com/mbilker/vgpu_unlock-rs.git
 ```
 
 After that, install the rust compiler
@@ -106,7 +106,9 @@ echo -e "[Service]\nEnvironment=LD_PRELOAD=/opt/vgpu_unlock-rs/target/release/li
 >
 >> **PLEASE READ THIS**
 >>
->> Starting from 17.0, all Pascal (and older) GPUs are **not officially supported** anymore. If you still want to use them, either stay on the LTS 16.x branch, or patch the driver with the relevant patch. 
+>> Starting from 17.0, all Pascal (and older) GPUs are **not officially supported** anymore. If you still want to use them, stay on the LTS 16.x branch.
+>>
+>> There are ways to use the 17.x driver too, but in that case you have to patch the driver even with a "supported" GPU, and go through some extra steps like copying the old vgpuConfig.xml. I might explain this in the future. 
 >
 > If you don't have a supported gpu from [this list](https://docs.nvidia.com/grid/gpus-supported-by-vgpu.html), please continue reading at [Enabling IOMMU](#enabling-iommu)
 >
@@ -268,8 +270,10 @@ Depending on your mainboard and cpu, the output will be different, in my output 
 This repo contains patches that allow you to use vGPU on not-qualified-vGPU cards (consumer GPUs). Those patches are binary patches, which means that each patch works **ONLY** for a specific driver version.
 
 I've created patches for the following driver versions:
+- 17.3 (550.90.05)
 - 17.1 (550.54.16)
 - 17.0 (550.54.10)
+- 16.7 (535.183.04) !!! USE THIS IF YOU ARE ON PASCAL OR OLDER !!!
 - 16.5 (535.161.05) the patch for this version is the same as for 16.4, the host driver wasnt changed in this release
 - 16.4 (535.161.05)
 - 16.2 (535.129.03)
@@ -287,7 +291,7 @@ Driver support by nvidia:
 > - 14.3 (510.108.03)
 > - 14.2 (510.85.03)
 
-You can choose which of those you want to use, but generally its recommended to use the latest, most up-to-date version (17.1 in this case).
+You can choose which of those you want to use, but generally its recommended to use the latest, most up-to-date version (17.3 in this case), unless you have a pascal series GPU or older, then use the latest 16.x driver.
 
 If you have a vGPU qualified GPU, you can use other versions too, because you don't need to patch the driver. However, you still have to make sure they are compatible with your proxmox version and kernel. Also I would not recommend using any older versions unless you have a very specific requirement.
 
@@ -301,11 +305,11 @@ I've created a small video tutorial to find the right driver version on the NVID
 
 ![Video Tutorial to find the right driver](downloading_driver.mp4)
 
-After downloading, extract the zip file and then copy the file called `NVIDIA-Linux-x86_64-DRIVERVERSION-vgpu-kvm.run` (where DRIVERVERSION is a string like `550.54.16`) from the `Host_Drivers` folder to your Proxmox host into the `/root/` folder using tools like FileZilla, WinSCP, scp or rsync.
+After downloading, extract the zip file and then copy the file called `NVIDIA-Linux-x86_64-DRIVERVERSION-vgpu-kvm.run` (where DRIVERVERSION is a string like `550.90.05`) from the `Host_Drivers` folder to your Proxmox host into the `/root/` folder using tools like FileZilla, WinSCP, scp or rsync.
 
-### ⚠️ From here on, I will be using the 17.1 driver, but the steps are the same for other driver versions
+### ⚠️ From here on, I will be using the 17.3 driver, but the steps are the same for other driver versions
 
-For example when I run a command like `chmod +x NVIDIA-Linux-x86_64-550.54.16-vgpu-kvm.run`, you should replace `550.54.16` with the driver version you are using (if you are using a different one). You can get the list of version numbers [here](#nvidia-driver).
+For example when I run a command like `chmod +x NVIDIA-Linux-x86_64-550.90.05-vgpu-kvm.run`, you should replace `550.90.05` with the driver version you are using (if you are using a different one). You can get the list of version numbers [here](#nvidia-driver).
 
 Every step where you potentially have to replace the version name will have this warning emoji next to it: ⚠️
 
@@ -313,15 +317,17 @@ Every step where you potentially have to replace the version name will have this
 >
 >> **PLEASE READ THIS**
 >>
->> Starting from 17.0, all Pascal (and older) GPUs are **not officially supported** anymore. If you still want to use them, either stay on the LTS 16.x branch, or patch the driver with the relevant patch. 
+>> Starting from 17.0, all Pascal (and older) GPUs are **not officially supported** anymore. If you still want to use them, stay on the LTS 16.x branch.
+>>
+>> There are ways to use the 17.x driver too, but in that case you have to patch the driver even with a "supported" GPU, and go through some extra steps like copying the old vgpuConfig.xml. I might explain this in the future. 
 >
 > If you have a vgpu supported gpu from [this list](https://docs.nvidia.com/grid/gpus-supported-by-vgpu.html), patching is not necessary, and you can skip this step.
 > You can simply install the driver package like this:
 >
 > ⚠️
 > ```bash
-> chmod +x NVIDIA-Linux-x86_64-550.54.16-vgpu-kvm.run
-> ./NVIDIA-Linux-x86_64-550.54.16-vgpu-kvm.run --dkms -m=kernel
+> chmod +x NVIDIA-Linux-x86_64-550.90.05-vgpu-kvm.run
+> ./NVIDIA-Linux-x86_64-550.90.05-vgpu-kvm.run --dkms -m=kernel
 > ```
 >
 > To finish the installation, reboot the system
@@ -337,21 +343,21 @@ Now, on the proxmox host, make the driver executable
 
 ⚠️
 ```bash
-chmod +x NVIDIA-Linux-x86_64-550.54.16-vgpu-kvm.run
+chmod +x NVIDIA-Linux-x86_64-550.90.05-vgpu-kvm.run
 ```
 
 And then patch it
 
 ⚠️
 ```bash
-./NVIDIA-Linux-x86_64-550.54.16-vgpu-kvm.run --apply-patch ~/vgpu-proxmox/550.54.16.patch
+./NVIDIA-Linux-x86_64-550.90.05-vgpu-kvm.run --apply-patch ~/vgpu-proxmox/550.90.05.patch
 ```
 That should output a lot of lines ending with
 ```
-Self-extractible archive "NVIDIA-Linux-x86_64-550.54.16-vgpu-kvm-custom.run" successfully created.
+Self-extractible archive "NVIDIA-Linux-x86_64-550.90.05-vgpu-kvm-custom.run" successfully created.
 ```
 
-You should now have a file called `NVIDIA-Linux-x86_64-550.54.16-vgpu-kvm-custom.run`, that is your patched driver.
+You should now have a file called `NVIDIA-Linux-x86_64-550.90.05-vgpu-kvm-custom.run`, that is your patched driver.
 
 ### Installing the driver
 
@@ -359,7 +365,7 @@ Now that the required patch is applied, you can install the driver
 
 ⚠️
 ```bash
-./NVIDIA-Linux-x86_64-550.54.16-vgpu-kvm-custom.run --dkms -m=kernel
+./NVIDIA-Linux-x86_64-550.90.05-vgpu-kvm-custom.run --dkms -m=kernel
 ```
 
 The installer will ask you `Would you like to register the kernel module sources with DKMS? This will allow DKMS to automatically build a new module, if you install a different kernel later.`, answer with `Yes`.
@@ -368,7 +374,7 @@ Depending on your hardware, the installation could take a minute or two.
 
 If everything went right, you will be presented with this message.
 ```
-Installation of the NVIDIA Accelerated Graphics Driver for Linux-x86_64 (version: 550.54.16) is now complete.
+Installation of the NVIDIA Accelerated Graphics Driver for Linux-x86_64 (version: 550.90.05) is now complete.
 ```
 
 Click `Ok` to exit the installer.
@@ -617,7 +623,7 @@ The recommended way to get around the license is to set up your own license serv
 
 Starting from driver version 17.0, nvidia in their infinite wisdom dropped support for older cards, so now no matter if the card used to be supported (Tesla P4 etc) or not, you have to patch the driver.
 
-**In addition to that** you have to copy the vgpuConfig.xml from 16.4 and replace the new 17.0 xml. To do that, you install and patch the 17.0 driver as described above, and then extract the 16.4 driver with `./driver.run -x`, and copy the `vgpuConfig.xml` from inside the extracted archive to `/usr/share/nvidia/vgpu/vgpuConfig.xml` (replace the existing file). Then reboot and you should see vgpu profiles in mdevctl again.
+**In addition to that** you have to copy the vgpuConfig.xml from 16.x and replace the new 17.x xml. To do that, you install and patch the 17.x driver as described above, and then extract the 16.x driver with `./driver.run -x`, and copy the `vgpuConfig.xml` from inside the extracted archive to `/usr/share/nvidia/vgpu/vgpuConfig.xml` (replace the existing file). Then reboot and you should see vgpu profiles in mdevctl again.
 
 ## Common problems
 
